@@ -15,7 +15,6 @@
 
 To keep our work organized, each team member will work on **their own branch**.  
 
----
 
 ## 1. Clone the Repository (first time only)  
 ```bash
@@ -23,7 +22,6 @@ git clone https://github.com/your-org/your-repo.git
 cd your-repo
 ```
 
----
 
 ## 2. Checkout Your Branch  
 Each member has their own branch (e.g. `alice`, `bob`, `charlie`). Switch to your branch:  
@@ -32,7 +30,6 @@ Each member has their own branch (e.g. `alice`, `bob`, `charlie`). Switch to you
 git checkout alice
 ```
 
----
 
 ## 3. Keep Your Branch Updated  
 
@@ -51,7 +48,6 @@ git checkout alice
 git merge main   # or rebase if you prefer
 ```
 
----
 
 ## 4. Make Changes & Commit  
 
@@ -62,7 +58,6 @@ git add .
 git commit -m "Update: improved booking algorithm"
 ```
 
----
 
 ## 5. Push Your Work  
 
@@ -70,14 +65,12 @@ git commit -m "Update: improved booking algorithm"
 git push origin alice
 ```
 
----
 
 ## 6. Merge to Main (When Ready)  
 - Open a **Pull Request (PR)** from your branch → `main`  
 - Request at least **1 reviewer**  
 - After approval, merge your branch into `main`  
 
----
 
 ## 🔑 Quick Commands Summary  
 
