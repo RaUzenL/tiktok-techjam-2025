@@ -11,6 +11,22 @@
 2. Agent/model: 2
 3. Deliverable for submission: sat night to discuss
 
+## Submission Requirement
+1. Build or update a working solution that addresses one of the 7 problem statements
+2. Include a text description that should explain the features and functionality of the project, and also include:
+  - Development tools used to build the project
+  - APIs used in the project
+  - Assets used in the project
+  - Libraries used in the project
+  - The relevant problem statement 
+3. Include a link to the team's public Github repository with Readme
+4. Include a demonstration video of the project. The video portion of the submission:
+  - should be less than three (3) minutes
+  - should include footage that shows the project functioning on the device for which it was built
+  - must be uploaded to and made publicly visible on YouTube, and a link to the video must be provided in the text description; and
+  - must not include third party trademarks, or copyrighted music or other material unless the Entrant has permission to use such material.
+5. Ensure that all deliverables detailed in the problem statement are addressed.
+
 # 🚀 Git Workflow  
 
 To keep our work organized, each team member will work on **their own branch**.  
