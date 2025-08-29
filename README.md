@@ -11,9 +11,6 @@
 2. Agent/model: 2
 3. Deliverable for submission: sat night to discuss
 
----
-
----
 # 🚀 Git Workflow  
 
 To keep our work organized, each team member will work on **their own branch**.  
