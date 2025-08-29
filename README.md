@@ -24,7 +24,15 @@ cd your-repo
 
 
 ## 2. Checkout Your Branch  
-Each member has their own branch (e.g. `alice`, `bob`, `charlie`). Switch to your branch:  
+Each member has their own branch (e.g. `alice`, `bob`, `charlie`). 
+Add ur branch:
+
+```bash
+git branch <branch-name>
+```
+
+
+Switch to your branch:  
 
 ```bash
 git checkout alice
