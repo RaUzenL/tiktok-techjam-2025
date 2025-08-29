@@ -1,0 +1,7 @@
+# Ignore data folders (raw datasets and cleaned outputs)
+data/
+csv_output/
+
+# Ignore system files (Mac, Windows)
+.DS_Store
+Thumbs.db
