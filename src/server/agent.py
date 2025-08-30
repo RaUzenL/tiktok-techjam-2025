@@ -5,6 +5,8 @@ import re
 from datetime import datetime, timezone
 from dateutil import tz
 
+import matplotlib.pyplot as plt
+import networkx as nx
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from huggingface_hub import InferenceClient
@@ -261,6 +263,26 @@ def build_graph():
     g.add_edge("aggregate", END)
     return g.compile()
 
+def to_networkx(compiled_app) -> nx.DiGraph:
+    g = compiled_app.get_graph()
+    try:
+        g_nx = g  # may already be a networkx graph
+        _ = list(g_nx.nodes)  # sanity check
+        return g_nx
+    except Exception:
+        # convert
+        out = nx.DiGraph()
+        nodes = [getattr(n, "id", str(n)) for n in getattr(g, "nodes", [])]
+        out.add_nodes_from(nodes)
+        for e in getattr(g, "edges", []):
+            s = getattr(e, "source", None)
+            t = getattr(e, "target", None)
+            sid = getattr(s, "id", s)
+            tid = getattr(t, "id", t)
+            if sid is not None and tid is not None:
+                out.add_edge(sid, tid)
+        return out
+
 # =========================
 # Example usage
 # =========================
@@ -280,6 +302,16 @@ if __name__ == "__main__":
     }
 
     app = build_graph()
+
+    G = to_networkx(app)
+
+    plt.figure(figsize=(8, 6))
+    # kamada_kawai gives stable DAG-ish layout without requiring iterability tricks
+    pos = nx.kamada_kawai_layout(G)
+    nx.draw(G, pos, with_labels=True, node_size=2000, font_size=9, arrows=True)
+    plt.tight_layout()
+    plt.show()
+
     out = app.invoke({"review": example})
     print({
         "model": MODEL_ID,

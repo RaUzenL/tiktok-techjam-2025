@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 
-# Paths (data folder is inside scripts/)
-RAW_DATA_PATH = "data/reviews.csv"  # relative to scripts/
+# Paths (data folder is inside src/)
+RAW_DATA_PATH = "data/reviews.csv"  # relative to src/
 
 def main():
     # Check if file exists
