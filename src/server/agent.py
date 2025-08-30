@@ -1,26 +1,22 @@
+# app/agent_core.py
 from __future__ import annotations
 from typing import TypedDict, Optional, Dict, Any, Literal, List
 import os
 import re
+import json
 from datetime import datetime, timezone
 from dateutil import tz
 
-import matplotlib.pyplot as plt
-import networkx as nx
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from huggingface_hub import InferenceClient
 
-# =========================
-# Config
-# =========================
-# Choose one:
-#   "google/gemma-3-12b-it"   or   "Qwen/Qwen3-8B"
-MODEL_ID = os.getenv("REVIEW_MODEL_ID", "google/gemma-3-12b-it")
+# ------------ Config (env-overridable) ------------
+MODEL_ID = os.getenv("REVIEW_MODEL_ID", "google/gemma-3-12b-it")  # or "Qwen/Qwen3-8B"
 HF_TOKEN = os.getenv("HF_TOKEN")
-TEMPERATURE = 0.0
-MAX_TOKENS = 256   # Structured JSON; keep it lean.
-TIMEOUT = 120
+TEMPERATURE = float(os.getenv("REVIEW_TEMPERATURE", "0.0"))
+MAX_TOKENS = int(os.getenv("REVIEW_MAX_TOKENS", "256"))
+TIMEOUT = int(os.getenv("REVIEW_TIMEOUT", "120"))
 
 # =========================
 # State
@@ -176,8 +172,6 @@ LLM_SYSTEM = (
 )
 
 def _hf_client() -> InferenceClient:
-    # InferenceClient exposes OpenAI-compatible chat.completions.
-    # It also supports JSON mode / structured outputs via response_format.  (Docs)  # :contentReference[oaicite:3]{index=3}
     return InferenceClient(model=MODEL_ID, token=HF_TOKEN, timeout=TIMEOUT)
 
 def llm_judge(state: ReviewState) -> ReviewState:
@@ -185,10 +179,7 @@ def llm_judge(state: ReviewState) -> ReviewState:
     f = state["features"]
 
     client = _hf_client()
-    # Build schema for structured outputs
     schema = PolicyJudgement.model_json_schema()
-
-    # Compose messages; OpenAI-compatible format is supported in InferenceClient. :contentReference[oaicite:4]{index=4}
     messages = [
         {"role": "system", "content": LLM_SYSTEM},
         {
@@ -199,19 +190,13 @@ def llm_judge(state: ReviewState) -> ReviewState:
             ),
         },
     ]
-
     out = client.chat_completion(
         messages=messages,
         max_tokens=MAX_TOKENS,
         temperature=TEMPERATURE,
-        # Enforce valid, schema-conformant JSON (Structured Outputs).
         response_format={"type": "json_schema", "json_schema": {"name": "PolicyJudgement", "schema": schema}},
-        # Tip: you can pass model/provider-specific flags via extra_body if needed. :contentReference[oaicite:5]{index=5}
     )
-
     content = out.choices[0].message.content
-    # `content` is guaranteed valid JSON matching the schema if the provider honors JSON mode.
-    import json
     state["llm_vote"] = json.loads(content)
     return state
 
@@ -238,7 +223,6 @@ def aggregate(state: ReviewState) -> ReviewState:
     if vote.get("visited") in ("yes", "probably"):
         conf += 0.05
     state["confidence"] = round(min(conf, 0.95), 2)
-
     state["explanation"] = vote.get("reasoning", "Combined decision.")
     return state
 
@@ -263,61 +247,19 @@ def build_graph():
     g.add_edge("aggregate", END)
     return g.compile()
 
-def to_networkx(compiled_app) -> nx.DiGraph:
-    g = compiled_app.get_graph()
-    try:
-        g_nx = g  # may already be a networkx graph
-        _ = list(g_nx.nodes)  # sanity check
-        return g_nx
-    except Exception:
-        # convert
-        out = nx.DiGraph()
-        nodes = [getattr(n, "id", str(n)) for n in getattr(g, "nodes", [])]
-        out.add_nodes_from(nodes)
-        for e in getattr(g, "edges", []):
-            s = getattr(e, "source", None)
-            t = getattr(e, "target", None)
-            sid = getattr(s, "id", s)
-            tid = getattr(t, "id", t)
-            if sid is not None and tid is not None:
-                out.add_edge(sid, tid)
-        return out
+# One global instance for API processes
+APP = build_graph()
 
-# =========================
-# Example usage
-# =========================
-if __name__ == "__main__":
-    example = {
-        "user_id": "112641626927833880743",
-        "name": "Little Man",
-        "time": 1533121309821,
-        "rating": 3,
-        "text": "Has nice food choices.",
-        "pics": [
-            {"url": ["https://lh5.googleusercontent.com/p/AF1QipMDSa1pSffRzM1AqS0phG3a_K2eSssz-vRY-cPf=w150-h150-k-no-p"]},
-            {"url": ["https://lh5.googleusercontent.com/p/AF1QipPgm5LcNt7zGDDb24vS8ST5Oe5SoWkjg6bn7vXN=w150-h150-k-no-p"]}
-        ],
-        "resp": None,
-        "gmap_id": "0x89c2605ade02a307:0x798d440705b8d9b3"
-    }
-
-    app = build_graph()
-
-    G = to_networkx(app)
-
-    plt.figure(figsize=(8, 6))
-    # kamada_kawai gives stable DAG-ish layout without requiring iterability tricks
-    pos = nx.kamada_kawai_layout(G)
-    nx.draw(G, pos, with_labels=True, node_size=2000, font_size=9, arrows=True)
-    plt.tight_layout()
-    plt.show()
-
-    out = app.invoke({"review": example})
-    print({
+def predict(review: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Deterministic function for API/CLI.
+    """
+    out = APP.invoke({"review": review})
+    return {
         "model": MODEL_ID,
         "final_decision": out["final_decision"],
         "explanation": out["explanation"],
         "confidence": out["confidence"],
         "features": out["features"],
         "llm_vote": out.get("llm_vote"),
-    })
+    }
