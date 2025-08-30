@@ -158,7 +158,7 @@ class PolicyJudgement(BaseModel):
     advertisement: bool = Field(..., description="True if promotional or contains links/ads.")
     irrelevant: bool = Field(..., description="True if content is not about the location.")
     rant_without_visit: bool = Field(..., description="True if it's a rant/complaint without evidence of visiting.")
-    visited: Literal["yes","probably","unclear","no"] = Field(..., description="Did they likely visit?")
+    visited: Literal["yes", "probably", "unclear", "no"] = Field(..., description="Did they likely visit?")
     relevant: bool = Field(..., description="Final judgement: passes all three policies.")
     reasoning: str = Field(..., description="Brief reason.")
 

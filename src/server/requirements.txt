@@ -1,0 +1,7 @@
+fastapi==0.114.2
+uvicorn[standard]==0.30.6
+langgraph>=0.2.33
+pydantic==2.8.2
+huggingface_hub>=0.24.6
+python-dateutil>=2.9.0.post0
+regex>=2024.5.15
